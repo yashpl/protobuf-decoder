@@ -10,6 +10,8 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import StringIO
+import gzip
 
 # Patch dir this file was loaded from into the path
 # (Burp doesn't do it automatically)
@@ -31,9 +33,31 @@ from javax.swing.filechooser import FileNameExtensionFilter
 from ui import ParameterProcessingRulesTable
 
 
-CONTENT_PROTOBUF = ('application/x-protobuf', 'application/octet-stream')
+CONTENT_PROTOBUF = ('application/x-protobuf', 'application/x-protobuffer', 'application/x-protobuffer; charset=utf-8', 'application/octet-stream')
 PROTO_FILENAME_EXTENSION_FILTER = FileNameExtensionFilter("*.proto, *.py",
                                                           ["proto", "py"])
+CONTENT_GZIP = ('gzip')
+
+
+def isGzip(content):
+    isGzip = False
+    headers = content.getHeaders()
+
+    # first header is the request/response line
+    for header in headers[1:]:
+        name, _, value = header.partition(':')
+        if name.lower() == 'content-encoding':
+            value = value.lower().strip()
+            if value in CONTENT_GZIP:
+                isGzip = True
+    return isGzip
+
+def gUnzip(gzipcontent):
+    buf = StringIO.StringIO(gzipcontent)
+    f = gzip.GzipFile(fileobj=buf)
+    body = f.read()
+    f.close()
+    return body
 
 
 class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStateListener):
@@ -188,7 +212,19 @@ class ProtobufEditorTab(IMessageEditorTab):
 
         # by default, let's assume the entire body is a protobuf message
 
-        body = content[info.getBodyOffset():].tostring()
+        # check if body is compressed (gzip)
+        # gunzip the content first if required
+
+        if isGzip(info):
+
+            #if isRequest:
+            #    print "Request body is using gzip: Uncompressing..."            
+            #else:
+            #    print "Response body is using gzip: Uncompressing..."            
+
+            body = gUnzip(content[info.getBodyOffset():].tostring())
+        else:
+            body = content[info.getBodyOffset():].tostring()
 
         # process parameters via rules defined in Protobuf Editor ui tab
 
@@ -206,11 +242,7 @@ class ProtobufEditorTab(IMessageEditorTab):
                 body = parameter.getValue().encode('utf-8')
 
                 for rule in rules.get('before', []):
-                    try:
-                        body = rule(body)
-                    except Exception as error:
-                        traceback.print_exc(file=self.callbacks.getStderr())
-                        raise error
+                    body = rule(body)
 
                 break
 
@@ -220,8 +252,10 @@ class ProtobufEditorTab(IMessageEditorTab):
             for name, descriptor in descriptors.iteritems():
 
                 try:
+                    print "Parsing message with proto descriptor %s (auto)." % (name)
                     message = parse_message(descriptor, body)
                 except Exception:
+                    print "(exception parsing message... - continue)"
                     continue
 
                 # Stop parsing on the first valid message we encounter
@@ -230,10 +264,19 @@ class ProtobufEditorTab(IMessageEditorTab):
                 # context menu).
 
                 if message.IsInitialized():
-                    self.editor.setText(str(message))
-                    self.editor.setEditable(True)
-                    self._current = (content, message, info, parameter)
-                    return
+                    # The message is initialized if all of its
+                    # required fields are set.
+                    #print "Message: [%s]" % (message)
+
+                    if str(message) == "":
+                        # parse_message() returned an empty message, but no
+                        # error or exception: continue to the next proto descriptor
+                        print "(message is empty, trying other proto descriptors...)"
+                    else:
+                        self.editor.setText(str(message))
+                        self.editor.setEditable(True)
+                        self._current = (content, message, info, parameter)
+                        return
 
         # If we get to this point, then no loaded protos could deserialize
         # the message. Shelling out to protoc should be a last resort.
@@ -253,8 +296,10 @@ class ProtobufEditorTab(IMessageEditorTab):
                 process.wait()
 
         if error:
+            #print "protoc displaying message - error..."
             self.editor.setText(error)
         else:
+            #print "protoc displaying message - output..."
             self.editor.setText(output)
 
         self.editor.setEditable(False)
@@ -280,11 +325,7 @@ class ProtobufEditorTab(IMessageEditorTab):
                     rules = self.extender.table.getParameterRules().get(parameter.getName(), {})
 
                     for rule in rules.get('after', []):
-                        try:
-                            serialized = rule(serialized)
-                        except Exception as error:
-                            traceback.print_exc(file=self.callbacks.getStderr())
-                            raise error
+                        serialized = rule(serialized)
 
                     param = self.helpers.buildParameter(
                             parameter.getName(), serialized, parameter.getType())
@@ -419,7 +460,14 @@ class DeserializeProtoActionListener(ActionListener):
         content, message, info, parameter = self.tab._current
 
         try:
-            body = content[info.getBodyOffset():].tostring()
+
+            # check if body is compressed (gzip)
+            # gunzip the content first if required
+
+            if isGzip(info):
+                body = gUnzip(content[info.getBodyOffset():].tostring())
+            else:
+                body = content[info.getBodyOffset():].tostring()
 
             if parameter is not None:
                 param = self.tab.helpers.getRequestParameter(
@@ -430,12 +478,9 @@ class DeserializeProtoActionListener(ActionListener):
                     body = param.getValue().encode('utf-8')
 
                     for rule in rules.get('before', []):
-                        try:
-                            body = rule(body)
-                        except Exception as error:
-                            traceback.print_exc(file=self.tab.callbacks.getStderr())
-                            raise error
-
+                        body = rule(body)
+                    
+            print "Parsing message with proto descriptor %s (by user)." % (self.descriptor.name)
             message = parse_message(self.descriptor, body)
 
             self.tab.editor.setText(str(message))
