@@ -28,34 +28,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Protocol message implementation hooks for C++ implementation.
+"""Sample module importing a nested proto from itself."""
 
-Contains helper functions used to create protocol message classes from
-Descriptor objects at runtime backed by the protocol buffer C++ API.
-"""
-
-__author__ = 'tibell@google.com (Johan Tibell)'
-
-from google.protobuf.pyext import _message
-from google.protobuf import message
-
-
-def NewMessage(bases, message_descriptor, dictionary):
-  """Creates a new protocol message *class*."""
-  new_bases = []
-  for base in bases:
-    if base is message.Message:
-      # _message.Message must come before message.Message as it
-      # overrides methods in that class.
-      new_bases.append(_message.Message)
-    new_bases.append(base)
-  return tuple(new_bases)
-
-
-def InitMessage(message_descriptor, cls):
-  """Constructs a new message instance (called before instance's __init__)."""
-
-  def SubInit(self, **kwargs):
-    super(cls, self).__init__(message_descriptor, **kwargs)
-  cls.__init__ = SubInit
-  cls.AddDescriptors(message_descriptor)
+from google.protobuf.internal.import_test_package import outer_pb2 as myproto
