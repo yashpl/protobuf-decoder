@@ -2,7 +2,7 @@ Uuid: bd8c70d3f1b74679b2a9fed03d36e81a
 ExtensionType: 2
 Name: Protobuf Decoder
 ScreenVersion: 1.2
-SerialVersion: 2
+SerialVersion: 3
 MinPlatformVersion: 0
 ProOnly: False
 Author:  Marcin Wielgoszewski, DinoSec
