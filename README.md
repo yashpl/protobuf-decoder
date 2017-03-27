@@ -7,20 +7,14 @@ A simple Google Protobuf Decoder for Burp
 Prerequisites
 -------------
 
-1. Download and install the [protoc](https://code.google.com/p/protobuf/).
-2. Burp Professional 1.5.01+
-3. [Jython 2.7+](http://www.jython.org/downloads.html)
+1. Burp Professional 1.7.17+
+2. [Jython 2.7+](http://www.jython.org/downloads.html)
 
 
 Install
 -------
 
-1. In Burp Extender tab, click Add
-1. Select the Extension type: Python
-1. Select the `protoburp.py` file
-1. Click Next
-
-The extension should be installed.
+In Burp Store, install the Protobuf Decoder extension.
 
 
 Frequently Asked Questions
