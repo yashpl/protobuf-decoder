@@ -4,7 +4,7 @@ Name: Protobuf Decoder
 RepoName: protobuf-decoder
 ScreenVersion: 1.2
 SerialVersion: 3
-MinPlatformVersion: 0
+MinPlatformVersion: 2
 ProOnly: False
 Author:  Marcin Wielgoszewski, DinoSec
 ShortDescription: Decodes and beautifies protobuf responses.
