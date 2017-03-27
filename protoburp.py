@@ -29,6 +29,7 @@ from java.lang import Boolean, RuntimeException
 from java.io import FileFilter
 from javax.swing import JButton, JFileChooser, JMenu, JMenuItem, JOptionPane, JPanel, JPopupMenu
 from javax.swing.filechooser import FileNameExtensionFilter
+from java.lang import System
 
 from ui import ParameterProcessingRulesTable
 
@@ -38,6 +39,21 @@ PROTO_FILENAME_EXTENSION_FILTER = FileNameExtensionFilter("*.proto, *.py",
                                                           ["proto", "py"])
 CONTENT_GZIP = ('gzip')
 
+def detectProtocBinaryLocation():
+    system = System.getProperty('os.name')
+
+    if system == "Linux":
+        os.chmod("./protoc-linux", 0755)
+        return os.path.join(os.getcwd(), "protoc-linux")
+    elif system.startswith("Mac "):
+        os.chmod("./protoc-mac", 0755)
+        return os.path.join(os.getcwd(), "protoc-mac")
+    elif system.startswith("Windows "):
+        return os.path.join(os.getcwd(), "protoc-windows.exe")
+    else:
+        raise RuntimeError("Unrecognized operating system: " + system)
+
+PROTOC_BINARY_LOCATION = detectProtocBinaryLocation()
 
 def isGzip(content):
     isGzip = False
@@ -78,7 +94,7 @@ class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStat
         self.enabled = False
 
         try:
-            process = subprocess.Popen(['protoc', '--version'],
+            process = subprocess.Popen([PROTOC_BINARY_LOCATION, '--version'],
                                        stdin=subprocess.PIPE,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE)
@@ -281,7 +297,7 @@ class ProtobufEditorTab(IMessageEditorTab):
         # If we get to this point, then no loaded protos could deserialize
         # the message. Shelling out to protoc should be a last resort.
 
-        process = subprocess.Popen(['protoc', '--decode_raw'],
+        process = subprocess.Popen([PROTOC_BINARY_LOCATION, '--decode_raw'],
                                    stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -504,7 +520,7 @@ def compile_and_import_proto(proto):
     if is_proto:
         try:
             os.chdir(os.path.abspath(proto.getParent()))
-            subprocess.check_call(['protoc', '--python_out',
+            subprocess.check_call([PROTOC_BINARY_LOCATION, '--python_out',
                                   tempdir, proto.getName()])
             module = proto.getName().replace('.proto', '_pb2')
 
