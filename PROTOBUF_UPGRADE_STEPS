@@ -1,0 +1,17 @@
+Download a release from https://github.com/google/protobuf/releases/
+Required files:
+	protobuf-python-X.Y.Z.tar.gz
+	protoc-X.Y.Z-linux-x86_32.zip
+	protoc-X.Y.Z-osx-x86_32.zip
+	protoc-X.Y.Z-win32.zip
+
+Extract the binaries and move them to the correct files in the repo per arch
+
+$ export pb_ver=X.Y.Z
+$ export PATH="$path_to_protoc_binary_dir:$PATH"
+$ tar zxvf protobuf-python-$pb_ver.tar.gz
+$ cd protobuf-$pb_ver/python
+$ mkdir foo
+$ PYTHONPATH=$(cd foo; pwd)/lib/python2.7/site-packages python setup.py install --prefix $(cd foo; pwd)
+$ rm -rf $path_to_extension_repo/Lib/google
+$ mv foo/lib/python2.7/site-packages/protobuf-$pb_ver-py2.7.egg/google $path_to_extension_repo/Lib
