@@ -20,12 +20,12 @@ In Burp Store, install the Protobuf Decoder extension.
 Frequently Asked Questions
 --------------------------
 
-1. Why can't I edit a decoded proto message?
+- Why can't I edit a decoded proto message?
 
 	> Serializing a message requires a proto file descriptor (\*.proto file).
 	> Without this proto, we don't know how fields should be serialized.
 
-1. What if I have a proto file descriptor?
+- What if I have a proto file descriptor?
 
 	> Load it from a Protobuf tab by right-clicking. Messages will be
 	> automatically decoded from then on. If you wish to manually
@@ -36,7 +36,7 @@ Frequently Asked Questions
 	> The extension will automatically serialize messages back before
 	> they're sent along.
 
-1. Can I deserialize protobufs passed as URL or form parameters?
+- Can I deserialize protobufs passed as URL or form parameters?
 
     > Yes, you can. In the 'Protobuf Editor' tab, add a parameter to
     > the table. You can specify additional pre and post processing
@@ -46,3 +46,14 @@ Frequently Asked Questions
     > Note, the editor tab window may not immediately pick up the changes.
     > You can work around this issue by cycling through requests (anything
     > that'd trigger the editor tab to reload itself)
+
+
+Gotchas
+-------
+
+- Since Java doesn't support methods larger than 64k, big proto definitions need
+  to be spit in multiple files. Otherwise, you get the error "Method code too
+  large"
+
+- proto2 files should always declare syntax = “proto2” in the header instead of
+  leaving it implicit, otherwise it won't work since the default is proto v3
