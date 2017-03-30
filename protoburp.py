@@ -77,7 +77,7 @@ def gUnzip(gzipcontent):
 
 
 class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStateListener):
-    EXTENSION_NAME = "Protobuf Editor"
+    EXTENSION_NAME = "Protobuf Decoder"
 
     def __init__(self):
         self.descriptors = OrderedDict()
@@ -242,7 +242,7 @@ class ProtobufEditorTab(IMessageEditorTab):
         else:
             body = content[info.getBodyOffset():].tostring()
 
-        # process parameters via rules defined in Protobuf Editor ui tab
+        # process parameters via rules defined in Protobuf Decoder ui tab
 
         parameter = None
 

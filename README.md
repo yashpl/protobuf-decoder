@@ -38,7 +38,7 @@ Frequently Asked Questions
 
 - Can I deserialize protobufs passed as URL or form parameters?
 
-    > Yes, you can. In the 'Protobuf Editor' tab, add a parameter to
+    > Yes, you can. In the 'Protobuf Decoder' tab, add a parameter to
     > the table. You can specify additional pre and post processing
     > rules, to handle base64 encoding or zlib compression. Don't forget
     > to check the enabled box for each rule once you're done.
