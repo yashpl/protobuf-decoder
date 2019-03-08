@@ -34,7 +34,8 @@ from java.lang import System
 from ui import ParameterProcessingRulesTable
 
 
-CONTENT_PROTOBUF = ('application/x-protobuf', 'application/x-protobuffer', 'application/x-protobuffer; charset=utf-8', 'application/octet-stream')
+CONTENT_PROTOBUF = ('application/grpc-web+proto')
+
 PROTO_FILENAME_EXTENSION_FILTER = FileNameExtensionFilter("*.proto, *.py",
                                                           ["proto", "py"])
 CONTENT_GZIP = ('gzip')
@@ -77,7 +78,7 @@ def gUnzip(gzipcontent):
 
 
 class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStateListener):
-    EXTENSION_NAME = "Protobuf Decoder"
+    EXTENSION_NAME = "grpc-web-proto Decoder"
 
     def __init__(self):
         self.descriptors = OrderedDict()
@@ -90,7 +91,6 @@ class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStat
     def registerExtenderCallbacks(self, callbacks):
         self.callbacks = callbacks
         self.helpers = callbacks.getHelpers()
-
         self.enabled = False
 
         try:
@@ -159,7 +159,7 @@ class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStat
 
 
 class ProtobufEditorTab(IMessageEditorTab):
-    TAB_CAPTION = "Protobuf"
+    TAB_CAPTION = "grpc-web-proto"
 
     def __init__(self, extender, controller, editable):
         self.extender = extender
@@ -212,7 +212,6 @@ class ProtobufEditorTab(IMessageEditorTab):
                 value = value.lower().strip()
                 if value in CONTENT_PROTOBUF:
                     return True
-
         return False
 
     def setMessage(self, content, isRequest):
@@ -242,6 +241,14 @@ class ProtobufEditorTab(IMessageEditorTab):
         else:
             body = content[info.getBodyOffset():].tostring()
 
+        #cut 5 bytes for grpc web
+        rawBytes = (content[info.getBodyOffset():])
+        oldPadding = rawBytes[0:5]
+        rawBytes = rawBytes[5:]
+        body = rawBytes.tostring()
+        print(body)
+
+
         # process parameters via rules defined in Protobuf Decoder ui tab
 
         parameter = None
@@ -262,11 +269,12 @@ class ProtobufEditorTab(IMessageEditorTab):
 
                 break
 
+
         # Loop through all proto descriptors loaded
 
         for package, descriptors in self.descriptors.iteritems():
             for name, descriptor in descriptors.iteritems():
-
+                print(name,descriptor)
                 try:
                     print "Parsing message with proto descriptor %s (auto)." % (name)
                     message = parse_message(descriptor, body)
@@ -334,6 +342,7 @@ class ProtobufEditorTab(IMessageEditorTab):
 
             try:
                 merge_message(self.editor.getText().tostring(), message)
+                print(info.getHeaders())
                 headers = info.getHeaders()
                 serialized = message.SerializeToString()
 
@@ -547,3 +556,4 @@ def compile_and_import_proto(proto):
         sys.path.pop()
         os.chdir(curdir)
         shutil.rmtree(tempdir)
+
