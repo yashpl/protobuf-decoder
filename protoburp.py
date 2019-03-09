@@ -12,6 +12,7 @@ import tempfile
 import traceback
 import StringIO
 import gzip
+import array
 
 # Patch dir this file was loaded from into the path
 # (Burp doesn't do it automatically)
@@ -78,7 +79,7 @@ def gUnzip(gzipcontent):
 
 
 class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStateListener):
-    EXTENSION_NAME = "grpc-web-proto Decoder"
+    EXTENSION_NAME = "grpc-web-proto Decoder Tab"
 
     def __init__(self):
         self.descriptors = OrderedDict()
@@ -112,6 +113,7 @@ class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStat
             return
 
         rules = []
+        '''
         saved_rules = callbacks.loadExtensionSetting('rules')
 
         if saved_rules:
@@ -122,6 +124,7 @@ class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStat
 
             for rule in rules:
                 rule[-1] = Boolean(rule[-1])
+        '''
 
         self.table = ParameterProcessingRulesTable(self, *rules)
 
@@ -159,7 +162,7 @@ class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStat
 
 
 class ProtobufEditorTab(IMessageEditorTab):
-    TAB_CAPTION = "grpc-web-proto"
+    TAB_CAPTION = "grpc-web-proto editor tab"
 
     def __init__(self, extender, controller, editable):
         self.extender = extender
@@ -214,6 +217,7 @@ class ProtobufEditorTab(IMessageEditorTab):
                     return True
         return False
 
+    #whenever string is loaded to grpc-web-proto editor tab
     def setMessage(self, content, isRequest):
         if content is None:
             self.editor.setText(None)
@@ -241,14 +245,6 @@ class ProtobufEditorTab(IMessageEditorTab):
         else:
             body = content[info.getBodyOffset():].tostring()
 
-        #cut 5 bytes for grpc web
-        rawBytes = (content[info.getBodyOffset():])
-        oldPadding = rawBytes[0:5]
-        rawBytes = rawBytes[5:]
-        body = rawBytes.tostring()
-        print(body)
-
-
         # process parameters via rules defined in Protobuf Decoder ui tab
 
         parameter = None
@@ -270,11 +266,17 @@ class ProtobufEditorTab(IMessageEditorTab):
                 break
 
 
-        # Loop through all proto descriptors loaded
+        #set message
+        rawBytes = (content[info.getBodyOffset():])
+        global oldPadding
+        oldPadding= rawBytes[0:4]
+        if rawBytes[0] == 0 and rawBytes[1] == 0 and rawBytes[2] == 0 and rawBytes[3] == 0:
+            rawBytes = rawBytes[5:]
+        body = rawBytes.tostring()
 
+        # Loop through all proto descriptors loaded
         for package, descriptors in self.descriptors.iteritems():
             for name, descriptor in descriptors.iteritems():
-                print(name,descriptor)
                 try:
                     print "Parsing message with proto descriptor %s (auto)." % (name)
                     message = parse_message(descriptor, body)
@@ -342,10 +344,12 @@ class ProtobufEditorTab(IMessageEditorTab):
 
             try:
                 merge_message(self.editor.getText().tostring(), message)
-                print(info.getHeaders())
                 headers = info.getHeaders()
                 serialized = message.SerializeToString()
 
+
+                oldPadding.append(len(serialized))
+                serialized = oldPadding.tostring() + serialized
                 if parameter is not None:
                     rules = self.extender.table.getParameterRules().get(parameter.getName(), {})
 
@@ -494,6 +498,7 @@ class DeserializeProtoActionListener(ActionListener):
             else:
                 body = content[info.getBodyOffset():].tostring()
 
+
             if parameter is not None:
                 param = self.tab.helpers.getRequestParameter(
                         content, parameter.getName())
@@ -504,7 +509,18 @@ class DeserializeProtoActionListener(ActionListener):
 
                     for rule in rules.get('before', []):
                         body = rule(body)
-                    
+
+
+
+            # cut 5 bytes for grpc web
+            rawBytes = (content[info.getBodyOffset():])
+            global oldPadding
+            oldPadding= rawBytes[0:4]
+            if rawBytes[0] == 0 and rawBytes[1] == 0 and rawBytes[2] == 0 and rawBytes[3] == 0:
+                rawBytes = rawBytes[5:]
+            body = rawBytes.tostring()
+
+
             print "Parsing message with proto descriptor %s (by user)." % (self.descriptor.name)
             message = parse_message(self.descriptor, body)
 
