@@ -265,13 +265,12 @@ class ProtobufEditorTab(IMessageEditorTab):
 
                 break
 
-
         #set message
         rawBytes = (content[info.getBodyOffset():])
         global oldPadding
         oldPadding= rawBytes[0:4]
         if rawBytes[0] == 0 and rawBytes[1] == 0 and rawBytes[2] == 0 and rawBytes[3] == 0:
-            rawBytes = rawBytes[5:]
+            rawBytes = rawBytes[5:rawBytes[4]+5]
         body = rawBytes.tostring()
 
         # Loop through all proto descriptors loaded
