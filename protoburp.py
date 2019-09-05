@@ -79,7 +79,7 @@ def gUnzip(gzipcontent):
 
 
 class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStateListener):
-    EXTENSION_NAME = "grpc-web-proto Decoder Tab"
+    EXTENSION_NAME = "Protobuf Decoder"
 
     def __init__(self):
         self.descriptors = OrderedDict()
@@ -162,7 +162,7 @@ class BurpExtender(IBurpExtender, IMessageEditorTabFactory, ITab, IExtensionStat
 
 
 class ProtobufEditorTab(IMessageEditorTab):
-    TAB_CAPTION = "grpc-web-proto editor tab"
+    TAB_CAPTION = "Protobuf Decoder"
 
     def __init__(self, extender, controller, editable):
         self.extender = extender
