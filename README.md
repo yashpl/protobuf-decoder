@@ -57,3 +57,16 @@ Gotchas
 
 - proto2 files should always declare syntax = “proto2” in the header instead of
   leaving it implicit, otherwise it won't work since the default is proto v3
+  
+  
+
+Protoc Versions
+-------
+https://github.com/protocolbuffers/protobuf/releases/tag/v3.17.3
+
+Win 32 : v3.17.3
+Win 64 : v3.17.3
+Mac 64 : v3.17.3
+Linux 32 : v3.17.3
+Linux 64 : v3.17.3
+
