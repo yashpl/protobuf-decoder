@@ -64,9 +64,9 @@ Protoc Versions
 -------
 https://github.com/protocolbuffers/protobuf/releases/tag/v3.17.3
 
-Win 32 : v3.17.3
-Win 64 : v3.17.3
-Mac 64 : v3.17.3
-Linux 32 : v3.17.3
+Win 32 : v3.17.3 <br>
+Win 64 : v3.17.3 <br>
+Mac 64 : v3.17.3 <br>
+Linux 32 : v3.17.3 <br>
 Linux 64 : v3.17.3
 
