@@ -62,11 +62,11 @@ Gotchas
 
 Protoc Versions
 -------
-https://github.com/protocolbuffers/protobuf/releases/tag/v3.17.3
+https://github.com/protocolbuffers/protobuf/releases/tag/v3.2.0
 
-Win 32 : v3.17.3 <br>
-Win 64 : v3.17.3 <br>
-Mac 64 : v3.17.3 <br>
-Linux 32 : v3.17.3 <br>
-Linux 64 : v3.17.3
+Win 32 : v3.2.0 <br>
+Mac 32 : v3.2.0 <br>
+Mac 64 : v3.2.0 <br>
+Linux 32 : v3.2.0 <br>
+Linux 64 : v3.2.0 <br>
 
