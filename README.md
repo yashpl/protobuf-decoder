@@ -47,6 +47,11 @@ Frequently Asked Questions
     > You can work around this issue by cycling through requests (anything
     > that'd trigger the editor tab to reload itself)
 
+- What if I need to use another version of protobuf or need windows 64bit protoc?
+
+    > Find the version that you want to use from https://github.com/protocolbuffers/protobuf/tags
+    > 1. Download the right protoc file according to your OS and overwrite the binary included in this repo
+    > 2. Download protobuf-python-3.x.x.zip, unzip it and move the google folder under protobuf-python-3.x.x/python to Lib/google.
 
 Gotchas
 -------
