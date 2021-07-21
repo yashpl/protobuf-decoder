@@ -54,7 +54,7 @@ def detectProtocBinaryLocation():
             os.chmod("./protoc-mac-32", 0755)
             return os.path.join(os.getcwd(), "protoc-mac-32")
         elif system.startswith("Windows "):
-            return os.path.join(os.getcwd(), "protoc-windows-32.exe")
+            return os.path.join(os.getcwd(), "protoc-windows.exe")
         else:
             raise RuntimeError("Unrecognized operating system: " + system)
     elif arch == "64bit":
@@ -65,7 +65,7 @@ def detectProtocBinaryLocation():
             os.chmod("./protoc-mac-64", 0755)
             return os.path.join(os.getcwd(), "protoc-mac-64")
         elif system.startswith("Windows "):
-            return os.path.join(os.getcwd(), "protoc-windows-64.exe")
+            return os.path.join(os.getcwd(), "protoc-windows.exe")
         else:
             raise RuntimeError("Unrecognized operating system: " + system)
     else:
