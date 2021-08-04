@@ -2,11 +2,12 @@ Uuid: bd8c70d3f1b74679b2a9fed03d36e81a
 ExtensionType: 2
 Name: Protobuf Decoder
 RepoName: protobuf-decoder
-ScreenVersion: 1.4
-SerialVersion: 6
+ScreenVersion: 1.5
+SerialVersion: 8
 MinPlatformVersion: 2
 ProOnly: False
 Author:  Marcin Wielgoszewski, DinoSec, Kai Qiang Tang
 ShortDescription: Decodes and beautifies protobuf responses.
 EntryPoint: protoburp.py
 BuildCommand: 
+SupportedProducts: Pro, Community 
