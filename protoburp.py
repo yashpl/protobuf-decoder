@@ -13,6 +13,7 @@ import traceback
 import StringIO
 import gzip
 import array
+import platform
 
 # Patch dir this file was loaded from into the path
 # (Burp doesn't do it automatically)
@@ -35,7 +36,7 @@ from java.lang import System
 from ui import ParameterProcessingRulesTable
 
 
-CONTENT_PROTOBUF = ('application/grpc-web+proto')
+CONTENT_PROTOBUF = ['application/x-protobuf', 'application/x-protobuffer', 'application/x-protobuffer; charset=utf-8', 'application/octet-stream', 'application/grpc-web+proto']
 
 PROTO_FILENAME_EXTENSION_FILTER = FileNameExtensionFilter("*.proto, *.py",
                                                           ["proto", "py"])
@@ -43,17 +44,33 @@ CONTENT_GZIP = ('gzip')
 
 def detectProtocBinaryLocation():
     system = System.getProperty('os.name')
+    arch = platform.architecture()[0]
 
-    if system == "Linux":
-        os.chmod("./protoc-linux", 0755)
-        return os.path.join(os.getcwd(), "protoc-linux")
-    elif system.startswith("Mac "):
-        os.chmod("./protoc-mac", 0755)
-        return os.path.join(os.getcwd(), "protoc-mac")
-    elif system.startswith("Windows "):
-        return os.path.join(os.getcwd(), "protoc-windows.exe")
+    if arch == "32bit":
+        if system == "Linux":
+            os.chmod("./protoc-linux-32", 0755)
+            return os.path.join(os.getcwd(), "protoc-linux-32")
+        elif system.startswith("Mac "):
+            os.chmod("./protoc-mac-32", 0755)
+            return os.path.join(os.getcwd(), "protoc-mac-32")
+        elif system.startswith("Windows "):
+            return os.path.join(os.getcwd(), "protoc-windows.exe")
+        else:
+            raise RuntimeError("Unrecognized operating system: " + system)
+    elif arch == "64bit":
+        if system == "Linux":
+            os.chmod("./protoc-linux-64", 0755)
+            return os.path.join(os.getcwd(), "protoc-linux-64")
+        elif system.startswith("Mac "):
+            os.chmod("./protoc-mac-64", 0755)
+            return os.path.join(os.getcwd(), "protoc-mac-64")
+        elif system.startswith("Windows "):
+            return os.path.join(os.getcwd(), "protoc-windows.exe")
+        else:
+            raise RuntimeError("Unrecognized operating system: " + system)
     else:
-        raise RuntimeError("Unrecognized operating system: " + system)
+        raise RuntimeError("Unrecognized operating system architecture: " + arch)
+
 
 PROTOC_BINARY_LOCATION = detectProtocBinaryLocation()
 
@@ -268,9 +285,13 @@ class ProtobufEditorTab(IMessageEditorTab):
         #set message
         rawBytes = (content[info.getBodyOffset():])
         global oldPadding
+        global hasPadding 
+        hasPadding = False
+
         oldPadding= rawBytes[0:4]
         if rawBytes[0] == 0 and rawBytes[1] == 0 and rawBytes[2] == 0 and rawBytes[3] == 0:
             rawBytes = rawBytes[5:rawBytes[4]+5]
+            hasPadding = True
         body = rawBytes.tostring()
 
         # Loop through all proto descriptors loaded
@@ -346,9 +367,10 @@ class ProtobufEditorTab(IMessageEditorTab):
                 headers = info.getHeaders()
                 serialized = message.SerializeToString()
 
+                if hasPadding:
+                    oldPadding.append(len(serialized))
+                    serialized = oldPadding.tostring() + serialized
 
-                oldPadding.append(len(serialized))
-                serialized = oldPadding.tostring() + serialized
                 if parameter is not None:
                     rules = self.extender.table.getParameterRules().get(parameter.getName(), {})
 
@@ -514,9 +536,14 @@ class DeserializeProtoActionListener(ActionListener):
             # cut 5 bytes for grpc web
             rawBytes = (content[info.getBodyOffset():])
             global oldPadding
+            global hasPadding 
+            hasPadding = False
+
             oldPadding= rawBytes[0:4]
             if rawBytes[0] == 0 and rawBytes[1] == 0 and rawBytes[2] == 0 and rawBytes[3] == 0:
                 rawBytes = rawBytes[5:]
+                hasPadding = True
+
             body = rawBytes.tostring()
 
 
